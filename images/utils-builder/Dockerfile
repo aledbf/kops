@@ -1,19 +1,23 @@
 FROM debian:jessie
 
-RUN echo "deb-src http://security.debian.org/ jessie/updates main" >> /etc/apt/sources.list
-RUN echo "deb-src http://ftp.us.debian.org/debian/ jessie main" >> /etc/apt/sources.list
+ENV MUSL_VERSION      1.1.16
+ENV SOCAT_VERSION     1.7.3.2
+ENV NCURSES_VERSION   6.0
+ENV READLINE_VERSION  7.0
+ENV OPENSSL_VERSION   1.0.2k
 
-RUN apt-get update
-
-RUN apt-get install --yes dpkg-dev
-RUN apt-get build-dep --yes socat
-
-RUN mkdir /socat
-
-# Note that this approach does _not_ include libssl, but we don't need it for kubernetes anyway
-RUN cd /socat; \
-    CFLAGS=-static LDFLAGS=-static CPPFLAGS=-static CFLAGS_APPEND=-static \
-    LDFLAGS_APPEND=-static CPPFLAGS_APPEND=-static \
-    apt-get source --build socat
+RUN apt-get update \
+  && apt-get upgrade --yes \
+  && apt-get install --yes \
+    automake \
+    build-essential \
+    curl \
+    git  \
+    pkg-config \
+    linux-libc-dev \
+  && apt-get clean
 
 COPY extract.sh /extract.sh
+COPY build.sh /build/build.sh
+
+RUN /build/build.sh
